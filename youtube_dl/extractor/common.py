@@ -4,7 +4,7 @@ import base64
 import datetime
 import hashlib
 import json
-import netrc
+#import netrc
 import os
 import re
 import socket
@@ -538,7 +538,7 @@ class InfoExtractor(object):
                 if mobj:
                     break
 
-        if not self._downloader.params.get('no_color') and os.name != 'nt' and sys.stderr.isatty():
+        if not self._downloader.params.get('no_color') and os.name != 'nt' and hasattr(sys.stderr, "isatty") and sys.stderr.isatty():
             _name = '\033[0;34m%s\033[0m' % name
         else:
             _name = name

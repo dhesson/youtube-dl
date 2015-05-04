@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+'''
 from .abc import ABCIE
 from .abc7news import Abc7NewsIE
 from .academicearth import AcademicEarthCourseIE
@@ -187,7 +188,9 @@ from .gamestar import GameStarIE
 from .gametrailers import GametrailersIE
 from .gazeta import GazetaIE
 from .gdcvault import GDCVaultIE
+'''
 from .generic import GenericIE
+'''
 from .gfycat import GfycatIE
 from .giantbomb import GiantBombIE
 from .giga import GigaIE
@@ -666,6 +669,7 @@ from .youjizz import YouJizzIE
 from .youku import YoukuIE
 from .youporn import YouPornIE
 from .yourupload import YourUploadIE
+'''
 from .youtube import (
     YoutubeIE,
     YoutubeChannelIE,
@@ -683,13 +687,14 @@ from .youtube import (
     YoutubeUserIE,
     YoutubeWatchLaterIE,
 )
+'''
 from .zapiks import ZapiksIE
 from .zdf import ZDFIE, ZDFChannelIE
 from .zingmp3 import (
     ZingMp3SongIE,
     ZingMp3AlbumIE,
 )
-
+'''
 _ALL_CLASSES = [
     klass
     for name, klass in globals().items()

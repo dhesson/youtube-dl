@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import calendar
 import codecs
 import contextlib
-import ctypes
+#import ctypes
 import datetime
 import email.utils
 import errno
@@ -1073,6 +1073,7 @@ if sys.platform == 'win32':
             raise OSError('Unlocking file failed: %r' % ctypes.FormatError())
 
 else:
+    '''
     import fcntl
 
     def _lock_file(f, exclusive):
@@ -1080,6 +1081,8 @@ else:
 
     def _unlock_file(f):
         fcntl.flock(f, fcntl.LOCK_UN)
+    '''
+    print ''
 
 
 class locked_file(object):
@@ -1369,7 +1372,7 @@ def check_executable(exe, args=[]):
     args can be a list of arguments for a short output (like -version) """
     try:
         subprocess.Popen([exe] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    except OSError:
+    except:
         return False
     return exe
 
@@ -1382,7 +1385,7 @@ def get_exe_version(exe, args=['--version'],
         out, _ = subprocess.Popen(
             [exe] + args,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
-    except OSError:
+    except:
         return False
     if isinstance(out, bytes):  # Python 2.x
         out = out.decode('ascii', 'ignore')
