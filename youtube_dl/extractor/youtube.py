@@ -822,7 +822,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                         existing_format.update(f)
                 else:
                     self.report_warning('Unknown MIME type %s in DASH manifest' % mime_type)
-        return formats
+        return (formats, dash_manifest_url)
 
     def _real_extract(self, url):
         proto = (
@@ -1110,12 +1110,13 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             raise ExtractorError('no conn, hlsvp or url_encoded_fmt_stream_map information found in video info')
 
         # Look for the DASH manifest
+        dash_manifest_url = ''
         if self._downloader.params.get('youtube_include_dash_manifest', True):
             dash_mpd = video_info.get('dashmpd')
             if dash_mpd:
                 dash_manifest_url = dash_mpd[0]
                 try:
-                    dash_formats = self._parse_dash_manifest(
+                    dash_formats, dash_manifest_url = self._parse_dash_manifest(
                         video_id, dash_manifest_url, player_url, age_gate)
                 except (ExtractorError, KeyError) as e:
                     self.report_warning(
@@ -1160,6 +1161,7 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
             'like_count': like_count,
             'dislike_count': dislike_count,
             'average_rating': float_or_none(video_info.get('avg_rating', [None])[0]),
+            'dash_manifest': dash_manifest_url,
             'formats': formats,
         }
 
