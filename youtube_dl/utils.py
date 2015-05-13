@@ -327,13 +327,6 @@ def sanitize_path(s):
     return os.path.join(*sanitized_path)
 
 
-def sanitize_url_path_consecutive_slashes(url):
-    """Collapses consecutive slashes in URLs' path"""
-    parsed_url = list(compat_urlparse.urlparse(url))
-    parsed_url[2] = re.sub(r'/{2,}', '/', parsed_url[2])
-    return compat_urlparse.urlunparse(parsed_url)
-
-
 def orderedSet(iterable):
     """ Remove all duplicates from the input iterable """
     res = []
@@ -1383,7 +1376,7 @@ def get_exe_version(exe, args=['--version'],
     or False if the executable is not present """
     try:
         out, _ = subprocess.Popen(
-            [exe] + args,
+            [encodeArgument(exe)] + args,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
     except:
         return False
@@ -1485,6 +1478,14 @@ def uppercase_escape(s):
     unicode_escape = codecs.getdecoder('unicode_escape')
     return re.sub(
         r'\\U[0-9a-fA-F]{8}',
+        lambda m: unicode_escape(m.group(0))[0],
+        s)
+
+
+def lowercase_escape(s):
+    unicode_escape = codecs.getdecoder('unicode_escape')
+    return re.sub(
+        r'\\u[0-9a-fA-F]{4}',
         lambda m: unicode_escape(m.group(0))[0],
         s)
 

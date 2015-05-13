@@ -40,7 +40,6 @@ from youtube_dl.utils import (
     read_batch_urls,
     sanitize_filename,
     sanitize_path,
-    sanitize_url_path_consecutive_slashes,
     prepend_extension,
     replace_extension,
     shell_quote,
@@ -53,6 +52,7 @@ from youtube_dl.utils import (
     unified_strdate,
     unsmuggle_url,
     uppercase_escape,
+    lowercase_escape,
     url_basename,
     urlencode_postdata,
     version_tuple,
@@ -174,26 +174,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(sanitize_path('../../abc'), '..\\..\\abc')
         self.assertEqual(sanitize_path('./abc'), 'abc')
         self.assertEqual(sanitize_path('./../abc'), '..\\abc')
-
-    def test_sanitize_url_path_consecutive_slashes(self):
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname/foo//bar/filename.html'),
-            'http://hostname/foo/bar/filename.html')
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname//foo/bar/filename.html'),
-            'http://hostname/foo/bar/filename.html')
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname//'),
-            'http://hostname/')
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname/foo/bar/filename.html'),
-            'http://hostname/foo/bar/filename.html')
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname/'),
-            'http://hostname/')
-        self.assertEqual(
-            sanitize_url_path_consecutive_slashes('http://hostname/abc//'),
-            'http://hostname/abc/')
 
     def test_prepend_extension(self):
         self.assertEqual(prepend_extension('abc.ext', 'temp'), 'abc.temp.ext')
@@ -417,6 +397,10 @@ class TestUtil(unittest.TestCase):
     def test_uppercase_escape(self):
         self.assertEqual(uppercase_escape('aä'), 'aä')
         self.assertEqual(uppercase_escape('\\U0001d550'), '𝕐')
+
+    def test_lowercase_escape(self):
+        self.assertEqual(lowercase_escape('aä'), 'aä')
+        self.assertEqual(lowercase_escape('\\u0026'), '&')
 
     def test_limit_length(self):
         self.assertEqual(limit_length(None, 12), None)

@@ -261,7 +261,10 @@ from .letv import (
     LetvPlaylistIE
 )
 from .libsyn import LibsynIE
-from .lifenews import LifeNewsIE
+from .lifenews import (
+    LifeNewsIE,
+    LifeEmbedIE,
+)
 from .liveleak import LiveLeakIE
 from .livestream import (
     LivestreamIE,
@@ -366,7 +369,10 @@ from .nrk import (
 )
 from .ntvde import NTVDeIE
 from .ntvru import NTVRuIE
-from .nytimes import NYTimesIE
+from .nytimes import (
+    NYTimesIE,
+    NYTimesArticleIE,
+)
 from .nuvid import NuvidIE
 from .odnoklassniki import OdnoklassnikiIE
 from .oktoberfesttv import OktoberfestTVIE
@@ -484,7 +490,8 @@ from .soundgasm import (
 from .southpark import (
     SouthParkIE,
     SouthParkEsIE,
-    SouthparkDeIE,
+    SouthParkDeIE,
+    SouthParkNlIE
 )
 from .space import SpaceIE
 from .spankbang import SpankBangIE
@@ -504,7 +511,10 @@ from .streamcloud import StreamcloudIE
 from .streamcz import StreamCZIE
 from .streetvoice import StreetVoiceIE
 from .sunporno import SunPornoIE
-from .svtplay import SVTPlayIE
+from .svt import (
+    SVTIE,
+    SVTPlayIE,
+)
 from .swrmediathek import SWRMediathekIE
 from .syfy import SyfyIE
 from .sztvhu import SztvHuIE
@@ -586,7 +596,11 @@ from .veoh import VeohIE
 from .vessel import VesselIE
 from .vesti import VestiIE
 from .vevo import VevoIE
-from .vgtv import VGTVIE
+from .vgtv import (
+    BTArticleIE,
+    BTVestlendingenIE,
+    VGTVIE,
+)
 from .vh1 import VH1IE
 from .vice import ViceIE
 from .viddler import ViddlerIE
@@ -649,9 +663,10 @@ from .xboxclips import XboxClipsIE
 from .xhamster import XHamsterIE
 from .xminus import XMinusIE
 from .xnxx import XNXXIE
-from .xvideos import XVideosIE
+from .xstream import XstreamIE
 from .xtube import XTubeUserIE, XTubeIE
 from .xuite import XuiteIE
+from .xvideos import XVideosIE
 from .xxxymovies import XXXYMoviesIE
 from .yahoo import (
     YahooIE,
