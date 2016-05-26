@@ -7,6 +7,7 @@ from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
     float_or_none,
+    srt_subtitles_timecode,
 )
 
 
@@ -39,8 +40,8 @@ class KanalPlayIE(InfoExtractor):
             '%s\r\n%s --> %s\r\n%s'
             % (
                 num,
-                self._subtitles_timecode(item['startMillis'] / 1000.0),
-                self._subtitles_timecode(item['endMillis'] / 1000.0),
+                srt_subtitles_timecode(item['startMillis'] / 1000.0),
+                srt_subtitles_timecode(item['endMillis'] / 1000.0),
                 item['text'],
             ) for num, item in enumerate(subs, 1))
 
@@ -48,7 +49,7 @@ class KanalPlayIE(InfoExtractor):
         subs = self._download_json(
             'http://www.kanal%splay.se/api/subtitles/%s' % (channel_id, video_id),
             video_id, 'Downloading subtitles JSON', fatal=False)
-        return {'se': [{'ext': 'srt', 'data': self._fix_subtitles(subs)}]} if subs else {}
+        return {'sv': [{'ext': 'srt', 'data': self._fix_subtitles(subs)}]} if subs else {}
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)

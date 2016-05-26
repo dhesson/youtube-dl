@@ -11,9 +11,10 @@ from ..utils import (
 
 
 class VideoTtIE(InfoExtractor):
+    _WORKING = False
     ID_NAME = 'video.tt'
     IE_DESC = 'video.tt - Your True Tube'
-    _VALID_URL = r'http://(?:www\.)?video\.tt/(?:(?:video|embed)/|watch_video\.php\?v=)(?P<id>[\da-zA-Z]{9})'
+    _VALID_URL = r'https?://(?:www\.)?video\.tt/(?:(?:video|embed)/|watch_video\.php\?v=)(?P<id>[\da-zA-Z]{9})'
 
     _TESTS = [{
         'url': 'http://www.video.tt/watch_video.php?v=amd5YujV8',
@@ -43,7 +44,7 @@ class VideoTtIE(InfoExtractor):
 
         formats = [
             {
-                'url': base64.b64decode(res['u']).decode('utf-8'),
+                'url': base64.b64decode(res['u'].encode('utf-8')).decode('utf-8'),
                 'ext': 'flv',
                 'format_id': res['l'],
             } for res in settings['res'] if res['u']

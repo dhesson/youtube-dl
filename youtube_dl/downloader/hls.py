@@ -1,104 +1,90 @@
 from __future__ import unicode_literals
 
-import os
+import os.path
 import re
-import subprocess
 
-from ..postprocessor.ffmpeg import FFmpegPostProcessor
-from .common import FileDownloader
-from ..compat import (
-    compat_urlparse,
-    compat_urllib_request,
-)
+from .fragment import FragmentFD
+from .external import FFmpegFD
+
+from ..compat import compat_urlparse
 from ..utils import (
-    encodeArgument,
     encodeFilename,
+    sanitize_open,
 )
 
 
-class HlsFD(FileDownloader):
-    def real_download(self, filename, info_dict):
-        url = info_dict['url']
-        self.report_destination(filename)
-        tmpfilename = self.temp_name(filename)
+class HlsFD(FragmentFD):
+    """ A limited implementation that does not require ffmpeg """
 
-        ffpp = FFmpegPostProcessor(downloader=self)
-        if not ffpp.available:
-            self.report_error('m3u8 download detected but ffmpeg or avconv could not be found. Please install one.')
-            return False
-        ffpp.check_version()
+    FD_NAME = 'hlsnative'
 
-        args = [
-            encodeArgument(opt)
-            for opt in (ffpp.executable, '-y', '-i', url, '-f', 'mp4', '-c', 'copy', '-bsf:a', 'aac_adtstoasc')]
-        args.append(encodeFilename(tmpfilename, True))
-
-        retval = subprocess.call(args)
-        if retval == 0:
-            fsize = os.path.getsize(encodeFilename(tmpfilename))
-            self.to_screen('\r[%s] %s bytes' % (args[0], fsize))
-            self.try_rename(tmpfilename, filename)
-            self._hook_progress({
-                'downloaded_bytes': fsize,
-                'total_bytes': fsize,
-                'filename': filename,
-                'status': 'finished',
-            })
-            return True
-        else:
-            self.to_stderr('\n')
-            self.report_error('%s exited with code %d' % (ffpp.basename, retval))
-            return False
-
-
-class NativeHlsFD(FileDownloader):
-    """ A more limited implementation that does not require ffmpeg """
+    @staticmethod
+    def can_download(manifest):
+        UNSUPPORTED_FEATURES = (
+            r'#EXT-X-KEY:METHOD=(?!NONE)',  # encrypted streams [1]
+            r'#EXT-X-BYTERANGE',  # playlists composed of byte ranges of media files [2]
+            # Live streams heuristic does not always work (e.g. geo restricted to Germany
+            # http://hls-geo.daserste.de/i/videoportal/Film/c_620000/622873/format,716451,716457,716450,716458,716459,.mp4.csmil/index_4_av.m3u8?null=0)
+            # r'#EXT-X-MEDIA-SEQUENCE:(?!0$)',  # live streams [3]
+            r'#EXT-X-PLAYLIST-TYPE:EVENT',  # media segments may be appended to the end of
+                                            # event media playlists [4]
+            # 1. https://tools.ietf.org/html/draft-pantos-http-live-streaming-17#section-4.3.2.4
+            # 2. https://tools.ietf.org/html/draft-pantos-http-live-streaming-17#section-4.3.2.2
+            # 3. https://tools.ietf.org/html/draft-pantos-http-live-streaming-17#section-4.3.3.2
+            # 4. https://tools.ietf.org/html/draft-pantos-http-live-streaming-17#section-4.3.3.5
+        )
+        return all(not re.search(feature, manifest) for feature in UNSUPPORTED_FEATURES)
 
     def real_download(self, filename, info_dict):
-        url = info_dict['url']
-        self.report_destination(filename)
-        tmpfilename = self.temp_name(filename)
+        man_url = info_dict['url']
+        self.to_screen('[%s] Downloading m3u8 manifest' % self.FD_NAME)
+        manifest = self.ydl.urlopen(man_url).read()
 
-        self.to_screen(
-            '[hlsnative] %s: Downloading m3u8 manifest' % info_dict['id'])
-        data = self.ydl.urlopen(url).read()
-        s = data.decode('utf-8', 'ignore')
-        segment_urls = []
+        s = manifest.decode('utf-8', 'ignore')
+
+        if not self.can_download(s):
+            self.report_warning(
+                'hlsnative has detected features it does not support, '
+                'extraction will be delegated to ffmpeg')
+            fd = FFmpegFD(self.ydl, self.params)
+            for ph in self._progress_hooks:
+                fd.add_progress_hook(ph)
+            return fd.real_download(filename, info_dict)
+
+        fragment_urls = []
         for line in s.splitlines():
             line = line.strip()
             if line and not line.startswith('#'):
                 segment_url = (
                     line
                     if re.match(r'^https?://', line)
-                    else compat_urlparse.urljoin(url, line))
-                segment_urls.append(segment_url)
-
-        is_test = self.params.get('test', False)
-        remaining_bytes = self._TEST_FILE_SIZE if is_test else None
-        byte_counter = 0
-        with open(tmpfilename, 'wb') as outf:
-            for i, segurl in enumerate(segment_urls):
-                self.to_screen(
-                    '[hlsnative] %s: Downloading segment %d / %d' %
-                    (info_dict['id'], i + 1, len(segment_urls)))
-                seg_req = compat_urllib_request.Request(segurl)
-                if remaining_bytes is not None:
-                    seg_req.add_header('Range', 'bytes=0-%d' % (remaining_bytes - 1))
-
-                segment = self.ydl.urlopen(seg_req).read()
-                if remaining_bytes is not None:
-                    segment = segment[:remaining_bytes]
-                    remaining_bytes -= len(segment)
-                outf.write(segment)
-                byte_counter += len(segment)
-                if remaining_bytes is not None and remaining_bytes <= 0:
+                    else compat_urlparse.urljoin(man_url, line))
+                fragment_urls.append(segment_url)
+                # We only download the first fragment during the test
+                if self.params.get('test', False):
                     break
 
-        self._hook_progress({
-            'downloaded_bytes': byte_counter,
-            'total_bytes': byte_counter,
+        ctx = {
             'filename': filename,
-            'status': 'finished',
-        })
-        self.try_rename(tmpfilename, filename)
+            'total_frags': len(fragment_urls),
+        }
+
+        self._prepare_and_start_frag_download(ctx)
+
+        frags_filenames = []
+        for i, frag_url in enumerate(fragment_urls):
+            frag_filename = '%s-Frag%d' % (ctx['tmpfilename'], i)
+            success = ctx['dl'].download(frag_filename, {'url': frag_url})
+            if not success:
+                return False
+            down, frag_sanitized = sanitize_open(frag_filename, 'rb')
+            ctx['dest_stream'].write(down.read())
+            down.close()
+            frags_filenames.append(frag_sanitized)
+
+        self._finish_frag_download(ctx)
+
+        for frag_file in frags_filenames:
+            os.remove(encodeFilename(frag_file))
+
         return True

@@ -33,6 +33,8 @@ if [ ! -z "`git status --porcelain | grep -v CHANGELOG`" ]; then echo 'ERROR: th
 useless_files=$(find youtube_dl -type f -not -name '*.py')
 if [ ! -z "$useless_files" ]; then echo "ERROR: Non-.py files in youtube_dl: $useless_files"; exit 1; fi
 if [ ! -f "updates_key.pem" ]; then echo 'ERROR: updates_key.pem missing'; exit 1; fi
+if ! type pandoc >/dev/null 2>/dev/null; then echo 'ERROR: pandoc is missing'; exit 1; fi
+if ! python3 -c 'import rsa' 2>/dev/null; then echo 'ERROR: python3-rsa is missing'; exit 1; fi
 
 /bin/echo -e "\n### First of all, testing..."
 make clean
@@ -45,9 +47,9 @@ fi
 /bin/echo -e "\n### Changing version in version.py..."
 sed -i "s/__version__ = '.*'/__version__ = '$version'/" youtube_dl/version.py
 
-/bin/echo -e "\n### Committing documentation and youtube_dl/version.py..."
-make README.md CONTRIBUTING.md supportedsites
-git add README.md CONTRIBUTING.md docs/supportedsites.md youtube_dl/version.py
+/bin/echo -e "\n### Committing documentation, templates and youtube_dl/version.py..."
+make README.md CONTRIBUTING.md .github/ISSUE_TEMPLATE.md supportedsites
+git add README.md CONTRIBUTING.md .github/ISSUE_TEMPLATE.md docs/supportedsites.md youtube_dl/version.py
 git commit -m "release $version"
 
 /bin/echo -e "\n### Now tagging, signing and pushing..."

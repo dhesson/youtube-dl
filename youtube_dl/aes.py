@@ -152,7 +152,7 @@ def aes_decrypt_text(data, password, key_size_bytes):
     """
     NONCE_LENGTH_BYTES = 8
 
-    data = bytes_to_intlist(base64.b64decode(data))
+    data = bytes_to_intlist(base64.b64decode(data.encode('utf-8')))
     password = bytes_to_intlist(password.encode('utf-8'))
 
     key = password[:key_size_bytes] + [0] * (key_size_bytes - len(password))
@@ -161,7 +161,7 @@ def aes_decrypt_text(data, password, key_size_bytes):
     nonce = data[:NONCE_LENGTH_BYTES]
     cipher = data[NONCE_LENGTH_BYTES:]
 
-    class Counter:
+    class Counter(object):
         __value = nonce + [0] * (BLOCK_SIZE_BYTES - NONCE_LENGTH_BYTES)
 
         def next_value(self):

@@ -14,7 +14,7 @@ from ..utils import (
 
 
 class VuClipIE(InfoExtractor):
-    _VALID_URL = r'http://(?:m\.)?vuclip\.com/w\?.*?cid=(?P<id>[0-9]+)'
+    _VALID_URL = r'https?://(?:m\.)?vuclip\.com/w\?.*?cid=(?P<id>[0-9]+)'
 
     _TEST = {
         'url': 'http://m.vuclip.com/w?cid=922692425&fid=70295&z=1010&nvar&frm=index.html',
@@ -49,7 +49,7 @@ class VuClipIE(InfoExtractor):
         links_code = self._search_regex(
             r'''(?xs)
                 (?:
-                    <img\s+src="/im/play.gif".*?>|
+                    <img\s+src="[^"]*/play.gif".*?>|
                     <!--\ player\ end\ -->\s*</div><!--\ thumb\ end-->
                 )
                 (.*?)

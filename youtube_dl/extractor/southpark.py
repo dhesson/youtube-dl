@@ -45,6 +45,14 @@ class SouthParkDeIE(SouthParkIE):
             'title': 'The Government Won\'t Respect My Privacy',
             'description': 'Cartman explains the benefits of "Shitter" to Stan, Kyle and Craig.',
         },
+    }, {
+        # non-ASCII characters in initial URL
+        'url': 'http://www.southpark.de/alle-episoden/s18e09-hashtag-aufwärmen',
+        'playlist_count': 4,
+    }, {
+        # non-ASCII characters in redirect URL
+        'url': 'http://www.southpark.de/alle-episoden/s18e09',
+        'playlist_count': 4,
     }]
 
 
@@ -55,5 +63,16 @@ class SouthParkNlIE(SouthParkIE):
 
     _TESTS = [{
         'url': 'http://www.southpark.nl/full-episodes/s18e06-freemium-isnt-free',
+        'playlist_count': 4,
+    }]
+
+
+class SouthParkDkIE(SouthParkIE):
+    IE_NAME = 'southparkstudios.dk'
+    _VALID_URL = r'https?://(?:www\.)?(?P<url>southparkstudios\.dk/(?:clips|full-episodes)/(?P<id>.+?)(\?|#|$))'
+    _FEED_URL = 'http://www.southparkstudios.dk/feeds/video-player/mrss/'
+
+    _TESTS = [{
+        'url': 'http://www.southparkstudios.dk/full-episodes/s18e07-grounded-vindaloop',
         'playlist_count': 4,
     }]
